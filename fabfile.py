@@ -29,6 +29,20 @@ def print2remote(inputfile):
     fa.run('lpr ' + os.path.join(cs.temp_storage, inputfile_base))
     fa.run('rm ' + os.path.join(cs.temp_storage, inputfile_base))
 
+def scan_from_remote(inputfile):
+    """
+    Scans a file from a scanner attachd to the server. 
+
+    The scan is initiated by the client. Saves the file on the client machine.
+
+    Parameters
+    ----------
+    inputfile: str
+        The local (to the client) filename of the file which is produced by the
+        scanner
+    """
+    return
+
 def setup_settings():
     """
     Copies the default_settings.py file to the current directory
