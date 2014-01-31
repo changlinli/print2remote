@@ -1,5 +1,6 @@
 import fabric.api as fa
 import fabric.contrib as fc
+import fabric.operations as fo
 import os
 import shutil
 try:
@@ -24,24 +25,64 @@ def print2remote(inputfile):
         pass
     else:
         fa.run('mkdir ' + cs.temp_storage)
+
     fa.put(inputfile, cs.temp_storage)
     inputfile_base = os.path.basename(inputfile)
     fa.run('lpr ' + os.path.join(cs.temp_storage, inputfile_base))
     fa.run('rm ' + os.path.join(cs.temp_storage, inputfile_base))
 
-def scan_from_remote(inputfile):
+def scan_from_remote(resolution=300, color='Color', img_format='tiff',
+                     destination=os.path.join(os.environ['HOME'], 'Downloads')):
     """
     Scans a file from a scanner attachd to the server. 
 
     The scan is initiated by the client. Saves the file on the client machine.
 
-    Parameters
+    Keyword Parameters
     ----------
-    inputfile: str
-        The local (to the client) filename of the file which is produced by the
-        scanner
+    resolution: int or str
+        The resolution at which we scan the image. This can be 'auto', 150, 300,
+        or 600. By default it is at 300.
+
+    color: str
+        Whether we scan in color or in grayscale. The possible choices are
+        'auto', 'Color', or 'Gray'.
+
+    img_format: str
+        Whether we format the resulting picture in pnm or tiff. The only options
+        are therefore logically 'pnm' or 'tiff'.
+
+    destination :str
+        Where we plan to store the scanned image on our local machine.
     """
-    return
+    if fc.files.exists(cs.temp_storage):
+        pass
+    else:
+        fa.run('mkdir ' + cs.temp_storage)
+
+    img_path = os.path.join(cs.temp_storage, 'img.{0}'.format(img_format))
+    fa.run('scanimage --resolution {0} --mode {1} --format {2} > {3}'.
+           format(resolution, color, img_format, img_path))
+
+    if os.isdir(destination):
+        destination_file = os.path.join(destination, 
+                                        'img.{0}'.format(img_format))
+        nonconflict_destination = find_nonconflicting_name(destination_file)
+    else:
+        nonconflict_destination = find_nonconflicting_name(destination)
+
+    fo.get(img_path, nonconflict_destination)
+    fa.run('rm ' + img_path)
+
+def find_nonconflicting_name(filename, counter=0):
+    """
+    Append a number as large as necessary to a filename in order to make sure
+    that this filename does not conflict with any other files.
+    """
+    if not os.isfile(filename):
+        return filename
+    else:
+        find_nonconflicting_name(filename.split('.')[0] + counter, counter + 1)
 
 def setup_settings():
     """
