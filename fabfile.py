@@ -64,13 +64,15 @@ def scan_from_remote(resolution=300, color='Color', img_format='tiff',
     fa.run('scanimage --resolution {0} --mode {1} --format {2} > {3}'.
            format(resolution, color, img_format, img_path))
 
-    if os.isdir(destination):
+    if os.path.isdir(destination):
         destination_file = os.path.join(destination, 
                                         'img.{0}'.format(img_format))
         nonconflict_destination = find_nonconflicting_name(destination_file)
     else:
         nonconflict_destination = find_nonconflicting_name(destination)
 
+    print(destination)
+    print(nonconflict_destination)
     fo.get(img_path, nonconflict_destination)
     fa.run('rm ' + img_path)
 
@@ -79,10 +81,16 @@ def find_nonconflicting_name(filename, counter=0):
     Append a number as large as necessary to a filename in order to make sure
     that this filename does not conflict with any other files.
     """
-    if not os.isfile(filename):
+    filename_parts = filename.split('.')
+    try_nonconflicting_name = (filename_parts[0] + str(counter) + '.' +
+                               '.'.join(filename_parts[1:]))
+
+    if not os.path.isfile(filename):
         return filename
+    elif not os.path.isfile(try_nonconflicting_name):
+        return try_nonconflicting_name
     else:
-        find_nonconflicting_name(filename.split('.')[0] + counter, counter + 1)
+        return find_nonconflicting_name(filename, counter + 1)
 
 def setup_settings():
     """
